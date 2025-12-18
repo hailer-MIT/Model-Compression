@@ -80,7 +80,6 @@ class CreditRiskModel(nn.Module):
         x = self.fc5(x)
         return x
 
-
 class SmallStudentModel(nn.Module):
     def __init__(self, input_size=20):
         super().__init__()
@@ -184,24 +183,12 @@ def save_model(model: nn.Module, name: str) -> str:
 
 
 def apply_pruning(model: nn.Module, amount: float = 0.3) -> nn.Module:
-    """Apply global L1 unstructured pruning across all Linear weights and make pruning permanent.
-
-    Note: unstructured pruning may not speed up dense inference unless using sparse kernels.
-    """
-    pruned = type(model)()  # same class
-    pruned.load_state_dict(model.state_dict())
-    params_to_prune = []
-    for name, module in pruned.named_modules():
-        if isinstance(module, nn.Linear):
-            params_to_prune.append((module, 'weight'))
-
-    if params_to_prune:
-        prune.global_unstructured(params_to_prune, pruning_method=prune.L1Unstructured, amount=amount)
-        # make pruning permanent
-        for module, _ in params_to_prune:
-            prune.remove(module, 'weight')
-
-    return pruned
+    # Unstructured global L1 pruning (deprecated here).
+    # We now prefer structured pruning that rebuilds a compact dense model
+    # because unstructured zeros remain in dense tensors and typically
+    # do not produce file-size or runtime wins on standard backends.
+    # The implemented structured alternative is `structured_prune_and_squeeze()`.
+    raise NotImplementedError("apply_pruning (unstructured) is disabled; use structured_prune_and_squeeze()")
 
 
 class SparseLinear(nn.Module):
@@ -496,9 +483,10 @@ def run_all(epochs=10, device='cpu', prune_amount=0.3):
 
     print(f'Baseline acc: {baseline_acc:.2f} | size: {baseline_size:.3f} MB | time: {baseline_time:.3f} ms')
 
-    # Pruning
-    pruned = apply_pruning(teacher, amount=prune_amount)
-    save_model(pruned, 'pruned_model.pth')
+    # Structured pruning: remove low-importance neurons and build a compact dense model
+    compact = structured_prune_and_squeeze(teacher, amount=prune_amount)
+    save_model(compact, 'pruned_compact_model.pth')
+    pruned = compact
     pruned_acc = evaluate_model(pruned, test_loader, device=device)
     pruned_size = get_model_size_mb(pruned)
     pruned_time = measure_inference_time(pruned, test_loader, device=device)

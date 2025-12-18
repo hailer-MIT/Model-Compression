@@ -14,10 +14,10 @@ Files produced by this repo
 - requirements.txt — Python dependencies
 
 Clone & run (Windows PowerShell)
-1. Clone the repo (replace <owner> and <repo> with actual values):
+1. Clone the repo 
 
-    git clone https://github.com/<owner>/<repo>.git
-    cd <repo>
+    git clone https://github.com/hailer-MIT/Model-Compression.git
+    cd Model-Compression
 
 2. Create & activate a virtual environment:
 
@@ -59,8 +59,8 @@ Quickstart (Windows PowerShell)
 1. Clone and enter the repo:
 
 ```powershell
-git clone https://github.com/<owner>/<repo>.git
-cd <repo>
+git clone https://github.com/hailer-MIT/Model-Compression.git
+cd Model-Compression
 ```
 
 2. Create & activate a virtual environment:
